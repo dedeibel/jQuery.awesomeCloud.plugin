@@ -28,6 +28,20 @@ awesomeCloud assumes that each child of the container is an HTML element with a 
 		"background" : "rgba(255,255,255,0)", // background color, transparent by default
 		"start" : "#20f", // color of the smallest font, if options.color = "gradient""
 		"end" : "rgb(200,0,0)" // color of the largest font, if options.color = "gradient"
+    "styles": {
+        "negative": {
+            "start": "#FF000F",
+            "end": "#7F0007"
+        },
+        "neutral": {
+            "start": "#E5E5E5",
+            "end": "#666666"
+        },
+        "positive": {
+            "start": "#707070",
+            "end": "#c3cd2d"
+        }
+    },
 	},
 	"options" : {
 		"color" : "gradient", // if "random-light" or "random-dark", color.start and color.end are ignored
@@ -44,8 +58,8 @@ awesomeCloud assumes that each child of the container is an HTML element with a 
 		<span data-weight="14">word</span>
 		<span data-weight="5">another</span>
 		<span data-weight="7">things</span>
-		<span data-weight="23">super</span>
-		<span data-weight="10">cloud</span>
+		<span data-weight="23" color-style="positive">super</span>
+		<span data-weight="10" color-style="negative">uncool</span>
 	</div>
 	<script>
 		var settings = {
@@ -53,9 +67,24 @@ awesomeCloud assumes that each child of the container is an HTML element with a 
 				"grid" : 16
 			},
 			"options" : {
-				"color" : "random-dark",
+				"color" : "gradient",
 				"printMultiplier" : 3
 			},
+	    "color" : {
+	    	"background" : "rgba(255,255,255,0)", // background color, transparent by default
+	    	"start" : "#20f", // color of the smallest font, if options.color = "gradient""
+	    	"end" : "rgb(200,0,0)" // color of the largest font, if options.color = "gradient"
+        "styles": {
+            "negative": {
+                "start": "#FF000F",
+                "end": "#7F0007"
+            },
+            "positive": {
+                "start": "#707070",
+                "end": "#c3cd2d"
+            }
+        },
+	    },
 			"font" : "Futura, Helvetica, sans-serif",
 			"shape" : "square"
 		}
@@ -69,6 +98,8 @@ AwesomeCloud uses the HTML5 canvas element to create word clouds similar to [htt
 If your words are all fairly evenly weighted and are large compared to the containing element, you may need to adjust the size.grid setting to make the output more attractive. Conversely, you can adjust the size.factor setting instead.
 
 It should be noted that the more words you have, the smaller the size.grid, and the larger the options.printMultiplier, the longer it will take to generate and display the word cloud.
+
+Minified using https://github.com/mishoo/UglifyJS2
 
 ## Extra Thanks
 

@@ -1,4 +1,4 @@
-/*! 
+/*!
 jQuery.awesomeCloud v0.2 indyarmy.com
 by Russ Porosky
 IndyArmy Network, Inc.
@@ -73,7 +73,8 @@ Extra Thanks:
 			"color": {
 				"background": "rgba(255,255,255,0)", // background color, transparent by default
 				"start": "#20f", // color of the smallest font, if options.color = "gradient""
-				"end": "#e00" // color of the largest font, if options.color = "gradient"
+				"end": "#e00", // color of the largest font, if options.color = "gradient"
+                styles: { }
 			},
 			"options": {
 				"color": "gradient", // if "random-light" or "random-dark", color.start and color.end are ignored
@@ -137,7 +138,21 @@ Extra Thanks:
 	}
 
 	AwesomeCloud.prototype = {
-		create: function () {
+        color_style_to_rgba: function(color_style) {
+            color_style.start = this.colorToRGBA(color_style.start);
+            color_style.end = this.colorToRGBA(color_style.end);
+        },
+
+        color_style_calc_increment: function(color_style, range) {
+            return {
+                "r": ( color_style.end.r - color_style.start.r ) / range,
+                "g": ( color_style.end.g - color_style.start.g ) / range,
+                "b": ( color_style.end.b - color_style.start.b ) / range,
+                "a": ( color_style.end.a - color_style.start.a ) / range
+            };
+        },
+
+    create: function () {
 			var $this = this,
 				i = 0,
 				ctxID = null,
@@ -155,6 +170,7 @@ Extra Thanks:
 				link = null,
 				target = null,
 				tag = null,
+                color_style = null,
 				dimension,
 				fctx,
 				wdPixel,
@@ -167,8 +183,13 @@ Extra Thanks:
 
 			this.settings.gridSize = Math.max(this.settings.size.grid, 4) * this.settings.options.printMultiplier;
 
-			this.settings.color.start = this.colorToRGBA(this.settings.color.start);
-			this.settings.color.end = this.colorToRGBA(this.settings.color.end);
+            this.settings.color.start = this.colorToRGBA(this.settings.color.start);
+            this.settings.color.end = this.colorToRGBA(this.settings.color.end);
+
+            for (var style in this.settings.color.styles) {
+                this.settings.color.styles[style].start = this.colorToRGBA(this.settings.color.styles[style].start);
+                this.settings.color.styles[style].end = this.colorToRGBA(this.settings.color.styles[style].end);
+            }
 			this.settings.color.background = this.colorToRGBA(this.settings.color.background);
 
 			this.settings.minSize = this.minimumFontSize();
@@ -292,7 +313,8 @@ Extra Thanks:
 					target = aElement.attr("target");
 					tag = aElement.html();
 				}
-				$this.words.push([ tag , currentWeight, link, target]);
+                color_style = $(this).attr("color-style");
+				$this.words.push([ tag , currentWeight, link, target, color_style]);
 			});
 			this.settings.range = this.settings.weight.highest - this.settings.weight.lowest;
 
@@ -376,12 +398,10 @@ Extra Thanks:
 			}
 
 			// Figure out the color stepping if options.color is "gradient".
-			this.settings.color.increment = {
-				"r": ( this.settings.color.end.r - this.settings.color.start.r ) / this.settings.range,
-				"g": ( this.settings.color.end.g - this.settings.color.start.g ) / this.settings.range,
-				"b": ( this.settings.color.end.b - this.settings.color.start.b ) / this.settings.range,
-				"a": ( this.settings.color.end.a - this.settings.color.start.a ) / this.settings.range
-			};
+            this.settings.color.increment = $this.color_style_calc_increment(this.settings.color, this.settings.range);
+            for (var style in this.settings.color.styles) {
+                this.settings.color.styles[style].increment = $this.color_style_calc_increment(this.settings.color.styles[style], this.settings.range);
+            }
 
 			// Start drawing words!
 			this.ngx = Math.floor(this.size.width / this.settings.gridSize);
@@ -440,7 +460,7 @@ Extra Thanks:
 					if (i >= $this.words.length) {
 						return;
 					}
-					$this.putWord($this.words[ i ][ 0 ], $this.words[ i ][ 1 ], $this.words[ i ][ 2 ], $this.words[ i ][ 3 ]);
+					$this.putWord($this.words[ i ][ 0 ], $this.words[ i ][ 1 ], $this.words[ i ][ 2 ], $this.words[ i ][ 3 ], $this.words[ i ][ 4 ]);
 					i += 1;
 					window.setImmediate(loop);
 				});
@@ -536,7 +556,7 @@ Extra Thanks:
 		destroyCanvas: function (id) {
 			$("#" + id).remove();
 		},
-		putWord: function (word, weight, link, target) {
+		putWord: function (word, weight, link, target, color_style) {
 			var $this = this,
 				rotate = ( Math.random() < this.settings.options.rotationRatio ),
 				fontSize = this.settings.weightFactor(weight),
@@ -601,7 +621,7 @@ Extra Thanks:
 								fc = document.getElementById(ctxID);
 								fctx.fillStyle = $this.settings.color.background.rgba;
 								fctx.fillRect(0, 0, w, h);
-								fctx.fillStyle = $this.wordcolor(word, weight, fontSize, R - r, gxy[ 2 ]);
+								fctx.fillStyle = $this.wordcolor(word, weight, fontSize, R - r, gxy[ 2 ], color_style);
 								fctx.font = fontSize.toString(10) + "px " + $this.settings.font;
 								fctx.textBaseline = "top";
 								if (rotate) {
@@ -615,7 +635,7 @@ Extra Thanks:
 							} else {
 								font = fontSize.toString(10) + "px " + $this.settings.font;
 								$this.ctx.font = font;
-								$this.ctx.fillStyle = $this.wordcolor(word, weight, fontSize, R - r, gxy[ 2 ]);
+								$this.ctx.fillStyle = $this.wordcolor(word, weight, fontSize, R - r, gxy[ 2 ], color_style);
 								$this.ctx.fillText(word, X, Y);
 								h = $this.getTextHeight(font).height;
 								w = $this.ctx.measureText(word).width;
@@ -660,11 +680,35 @@ Extra Thanks:
 			}
 			return true;
 		},
-		wordcolor: function (word, weight, fontSize, radius, theta) {
+
+        color_setting_start: function(color_style) {
+            if (color_style === undefined || color_style === "default" || this.settings.color.styles[color_style] === undefined || this.settings.color.styles[color_style].start === undefined) {
+                return this.settings.color.start;
+            }
+          return this.settings.color.styles[color_style].start;
+        },
+
+        color_setting_end: function(color_style) {
+            if (color_style === undefined || color_style === "default" || this.settings.color.styles[color_style] === undefined || this.settings.color.styles[color_style].end === undefined) {
+                return this.settings.color.end;
+            }
+            return this.settings.color.styles[color_style].end;
+        },
+
+        color_setting_increment: function(color_style) {
+            if (color_style === undefined || color_style === "default" || this.settings.color.styles[color_style] === undefined || this.settings.color.styles[color_style].increment === undefined) {
+                return this.settings.color.increment;
+            }
+            return this.settings.color.styles[color_style].increment;
+        },
+
+		wordcolor: function (word, weight, fontSize, radius, theta, color_style) {
 			var output = null;
 			switch (this.settings.options.color) {
 				case "gradient" :
-					output = "rgba(" + Math.round(this.settings.color.start.r + ( this.settings.color.increment.r * ( weight - this.settings.weight.lowest ) )) + "," + Math.round(this.settings.color.start.g + ( this.settings.color.increment.g * ( weight - this.settings.weight.lowest ) )) + "," + Math.round(this.settings.color.start.b + ( this.settings.color.increment.b * ( weight - this.settings.weight.lowest ) )) + "," + Math.round(this.settings.color.start.a + ( this.settings.color.increment.a * ( weight - this.settings.weight.lowest ) )) + ")";
+                    var start = this.color_setting_start(color_style);
+                    var inc = this.color_setting_increment(color_style);
+					output = "rgba(" + Math.round(start.r + ( inc.r * ( weight - this.settings.weight.lowest ) )) + "," + Math.round(start.g + ( inc.g * ( weight - this.settings.weight.lowest ) )) + "," + Math.round(start.b + ( inc.b * ( weight - this.settings.weight.lowest ) )) + "," + Math.round(start.a + ( inc.a * ( weight - this.settings.weight.lowest ) )) + ")";
 					break;
 				case "random-dark" :
 					output = "rgba(" + Math.floor(Math.random() * 128).toString(10) + "," + Math.floor(Math.random() * 128).toString(10) + "," + Math.floor(Math.random() * 128).toString(10) + ",1)";
@@ -676,7 +720,7 @@ Extra Thanks:
 					if (typeof this.settings.wordColor !== "function") {
 						output = "rgba(127,127,127,1)";
 					} else {
-						output = this.settings.wordColor(word, weight, fontSize, radius, theta);
+						output = this.settings.wordColor(word, weight, fontSize, radius, theta, color_style);
 					}
 					break;
 			}
